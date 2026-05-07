@@ -53,12 +53,12 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 # CONFIG
 # =========================================================
 
-BOT_TOKEN = "YOUR_BOT_TOKEN"
+BOT_TOKEN = "8796918085:AAHuy3GTUEyP5LEN8fDKxvo6jWZjBMHY9D0"
 
-ADMIN_ID = 123456789
+ADMIN_ID = 1350783137
 
-CHANNEL_ID = -1001234567890
-CHANNEL_LINK = "https://t.me/your_channel"
+CHANNEL_ID = -1003931253794
+CHANNEL_LINK = "https://t.me/+fIGX41vfUl1lMTY6"
 
 DB_NAME = "beauty.db"
 
