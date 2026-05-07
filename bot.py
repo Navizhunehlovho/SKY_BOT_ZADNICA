@@ -66,9 +66,11 @@ DB_NAME = "beauty.db"
 # BOT
 # =========================================================
 
+from aiogram.client.default import DefaultBotProperties
+
 bot = Bot(
     token=BOT_TOKEN,
-    parse_mode=ParseMode.HTML
+    default=DefaultBotProperties(parse_mode=ParseMode.HTML)
 )
 
 dp = Dispatcher()
