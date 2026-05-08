@@ -1,3 +1,10 @@
+```python id="4nq8vz"
+# =========================================================
+# PREMIUM BEAUTY SALON BOT
+# LEVEL: COMMERCIAL / PREMIUM
+# AIROGRAM 3.x
+# =========================================================
+
 import asyncio
 import logging
 import re
@@ -14,7 +21,8 @@ from aiogram.types import (
     InlineKeyboardMarkup,
     InlineKeyboardButton,
     ReplyKeyboardMarkup,
-    KeyboardButton
+    KeyboardButton,
+    FSInputFile
 )
 
 from aiogram.client.default import DefaultBotProperties
@@ -28,20 +36,33 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 # LOGGING
 # =========================================================
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 # =========================================================
 # CONFIG
 # =========================================================
 
-BOT_TOKEN = "8796918085:AAHuy3GTUEyP5LEN8fDKxvo6jWZjBMHY9D0"
+BOT_TOKEN = "YOUR_BOT_TOKEN"
 
 ADMIN_ID = 1350783137
 
-CHANNEL_ID = -1003931253794
-CHANNEL_LINK = "https://t.me/+fIGX41vfUl1lMTY6"
+CHANNEL_ID = -100XXXXXXXXXX
+CHANNEL_LINK = "https://t.me/your_channel"
 
 DB_NAME = "beauty.db"
+
+SALON_NAME = "LUXE BEAUTY STUDIO"
+
+INSTAGRAM = "https://instagram.com/your_inst"
+
+ADDRESS = "Москва, Тверская 1"
+
+PHONE = "+7 999 999 99 99"
+
+WORK_TIME = "10:00 - 22:00"
 
 # =========================================================
 # BOT
@@ -63,6 +84,7 @@ scheduler = AsyncIOScheduler()
 # =========================================================
 
 class BookingState(StatesGroup):
+
     waiting_service = State()
     waiting_date = State()
     waiting_time = State()
@@ -77,26 +99,58 @@ async def init_db():
 
     async with aiosqlite.connect(DB_NAME) as db:
 
+        # SLOTS
+
         await db.execute("""
         CREATE TABLE IF NOT EXISTS slots (
+
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+
             service TEXT,
             date TEXT,
             time TEXT,
+
             is_booked INTEGER DEFAULT 0
         )
         """)
 
+        # BOOKINGS
+
         await db.execute("""
         CREATE TABLE IF NOT EXISTS bookings (
+
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+
             user_id INTEGER,
+
+            username TEXT,
+
             service TEXT,
+
             name TEXT,
+
             phone TEXT,
+
             date TEXT,
+
             time TEXT,
+
+            created_at TEXT,
+
             reminder_job_id TEXT
+        )
+        """)
+
+        # CLIENTS
+
+        await db.execute("""
+        CREATE TABLE IF NOT EXISTS clients (
+
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            user_id INTEGER UNIQUE,
+
+            visits INTEGER DEFAULT 0
         )
         """)
 
@@ -111,12 +165,17 @@ async def add_slot(service, date, time):
     async with aiosqlite.connect(DB_NAME) as db:
 
         await db.execute("""
-        INSERT INTO slots (service, date, time)
+        INSERT INTO slots (
+            service,
+            date,
+            time
+        )
         VALUES (?, ?, ?)
         """, (service, date, time))
 
         await db.commit()
 
+# =========================================================
 
 async def get_dates(service):
 
@@ -125,12 +184,14 @@ async def get_dates(service):
         cursor = await db.execute("""
         SELECT DISTINCT date
         FROM slots
-        WHERE service = ? AND is_booked = 0
+        WHERE service = ?
+        AND is_booked = 0
         ORDER BY date
         """, (service,))
 
         return await cursor.fetchall()
 
+# =========================================================
 
 async def get_times(service, date):
 
@@ -139,12 +200,15 @@ async def get_times(service, date):
         cursor = await db.execute("""
         SELECT time
         FROM slots
-        WHERE service = ? AND date = ? AND is_booked = 0
+        WHERE service = ?
+        AND date = ?
+        AND is_booked = 0
         ORDER BY time
         """, (service, date))
 
         return await cursor.fetchall()
 
+# =========================================================
 
 async def get_user_booking(user_id):
 
@@ -158,9 +222,45 @@ async def get_user_booking(user_id):
 
         return await cursor.fetchone()
 
+# =========================================================
+
+async def increase_visits(user_id):
+
+    async with aiosqlite.connect(DB_NAME) as db:
+
+        cursor = await db.execute("""
+        SELECT visits
+        FROM clients
+        WHERE user_id = ?
+        """, (user_id,))
+
+        client = await cursor.fetchone()
+
+        if client:
+
+            await db.execute("""
+            UPDATE clients
+            SET visits = visits + 1
+            WHERE user_id = ?
+            """, (user_id,))
+
+        else:
+
+            await db.execute("""
+            INSERT INTO clients (
+                user_id,
+                visits
+            )
+            VALUES (?, 1)
+            """, (user_id,))
+
+        await db.commit()
+
+# =========================================================
 
 async def create_booking(
     user_id,
+    username,
     service,
     name,
     phone,
@@ -171,36 +271,64 @@ async def create_booking(
 
     async with aiosqlite.connect(DB_NAME) as db:
 
+        # DOUBLE BOOKING PROTECTION
+
+        cursor = await db.execute("""
+        SELECT is_booked
+        FROM slots
+        WHERE service = ?
+        AND date = ?
+        AND time = ?
+        """, (service, date, time))
+
+        slot = await cursor.fetchone()
+
+        if not slot or slot[0] == 1:
+            return False
+
         await db.execute("""
         UPDATE slots
         SET is_booked = 1
-        WHERE service = ? AND date = ? AND time = ?
+        WHERE service = ?
+        AND date = ?
+        AND time = ?
         """, (service, date, time))
 
         await db.execute("""
-        INSERT INTO bookings
-        (
+        INSERT INTO bookings (
+
             user_id,
+            username,
             service,
             name,
             phone,
             date,
             time,
+            created_at,
             reminder_job_id
+
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
+
             user_id,
+            username,
             service,
             name,
             phone,
             date,
             time,
+            str(datetime.now()),
             reminder_job_id
         ))
 
         await db.commit()
 
+        await increase_visits(user_id)
+
+        return True
+
+# =========================================================
 
 async def cancel_booking_db(user_id):
 
@@ -221,7 +349,9 @@ async def cancel_booking_db(user_id):
             await db.execute("""
             UPDATE slots
             SET is_booked = 0
-            WHERE service = ? AND date = ? AND time = ?
+            WHERE service = ?
+            AND date = ?
+            AND time = ?
             """, (service, date, time))
 
             await db.execute("""
@@ -235,6 +365,7 @@ async def cancel_booking_db(user_id):
 
         return None
 
+# =========================================================
 
 async def get_all_bookings():
 
@@ -249,7 +380,7 @@ async def get_all_bookings():
         return await cursor.fetchall()
 
 # =========================================================
-# SUB CHECK
+# SUBSCRIPTION
 # =========================================================
 
 async def check_subscription(user_id):
@@ -261,32 +392,40 @@ async def check_subscription(user_id):
             user_id
         )
 
+        print(member.status)
+
         return member.status in [
             "member",
             "administrator",
             "creator"
         ]
 
-    except:
+    except Exception as e:
+
+        print("SUB ERROR:", e)
+
         return False
 
 # =========================================================
-# REMINDER
+# REMINDERS
 # =========================================================
 
-async def send_reminder(user_id, time):
+async def send_reminder(user_id, date, time):
 
     try:
 
         await bot.send_message(
             user_id,
-            f"⏰ Напоминание!\n\n"
-            f"Вы записаны завтра в {time} ❤️"
+            f"⏰ <b>Напоминание о записи</b>\n\n"
+            f"📅 Завтра: {date}\n"
+            f"⏰ Время: {time}\n\n"
+            f"Ждём вас ❤️"
         )
 
     except:
         pass
 
+# =========================================================
 
 def schedule_reminder(user_id, date, time):
 
@@ -306,7 +445,7 @@ def schedule_reminder(user_id, date, time):
         send_reminder,
         trigger="date",
         run_date=reminder_time,
-        args=[user_id, time],
+        args=[user_id, date, time],
         id=job_id
     )
 
@@ -319,30 +458,35 @@ def schedule_reminder(user_id, date, time):
 def main_menu():
 
     return ReplyKeyboardMarkup(
+
         keyboard=[
 
             [
                 KeyboardButton(text="📅 Записаться"),
-                KeyboardButton(text="💅 Прайс")
+                KeyboardButton(text="💎 Услуги")
             ],
 
             [
                 KeyboardButton(text="🖼 Портфолио"),
-                KeyboardButton(text="❌ Моя запись")
+                KeyboardButton(text="💰 Прайс")
             ],
 
             [
-                KeyboardButton(text="📞 Контакты")
+                KeyboardButton(text="👑 Моя запись"),
+                KeyboardButton(text="📍 Контакты")
             ]
         ],
+
         resize_keyboard=True,
         input_field_placeholder="Выберите действие..."
     )
 
+# =========================================================
 
 def services_keyboard():
 
     return InlineKeyboardMarkup(
+
         inline_keyboard=[
 
             [
@@ -354,20 +498,28 @@ def services_keyboard():
 
             [
                 InlineKeyboardButton(
-                    text="👁 Ресницы",
+                    text="👁 Наращивание ресниц",
                     callback_data="service_Ресницы"
                 )
             ],
 
             [
                 InlineKeyboardButton(
-                    text="🪄 Брови",
+                    text="✨ Брови",
                     callback_data="service_Брови"
+                )
+            ],
+
+            [
+                InlineKeyboardButton(
+                    text="💎 VIP Комплекс",
+                    callback_data="service_VIP"
                 )
             ]
         ]
     )
 
+# =========================================================
 
 def sub_keyboard():
 
@@ -376,14 +528,14 @@ def sub_keyboard():
 
             [
                 InlineKeyboardButton(
-                    text="Подписаться",
+                    text="📢 Подписаться",
                     url=CHANNEL_LINK
                 )
             ],
 
             [
                 InlineKeyboardButton(
-                    text="Проверить подписку",
+                    text="✅ Проверить подписку",
                     callback_data="check_sub"
                 )
             ]
@@ -397,24 +549,71 @@ def sub_keyboard():
 @dp.message(Command("start"))
 async def start(message: Message):
 
+    text = (
+        f"👑 <b>{SALON_NAME}</b>\n\n"
+
+        f"Добро пожаловать в премиальную "
+        f"beauty-студию ❤️\n\n"
+
+        f"✨ Онлайн запись\n"
+        f"✨ Напоминания\n"
+        f"✨ Премиальный сервис\n\n"
+
+        f"Выберите действие ниже 👇"
+    )
+
     await message.answer(
-        "<b>Добро пожаловать ❤️</b>\n\n"
-        "Выберите действие ниже 👇",
+        text,
         reply_markup=main_menu()
     )
 
 # =========================================================
-# PRICE
+# SERVICES
 # =========================================================
 
-@dp.message(F.text == "💅 Прайс")
+@dp.message(F.text == "💎 Услуги")
+async def services(message: Message):
+
+    await message.answer(
+        "<b>💎 Наши услуги:</b>\n\n"
+
+        "💅 Маникюр\n"
+        "👁 Наращивание ресниц\n"
+        "✨ Оформление бровей\n"
+        "💎 VIP-комплексы"
+    )
+
+# =========================================================
+# PRICES
+# =========================================================
+
+@dp.message(F.text == "💰 Прайс")
 async def prices(message: Message):
 
     await message.answer(
-        "<b>💅 Прайс:</b>\n\n"
-        "Маникюр — 2500₽\n"
-        "Ресницы — 3000₽\n"
-        "Брови — 1500₽"
+        "<b>💰 Прайс-лист:</b>\n\n"
+
+        "💅 Маникюр — 2500₽\n"
+        "👁 Ресницы — 3500₽\n"
+        "✨ Брови — 1800₽\n"
+        "💎 VIP — 7000₽"
+    )
+
+# =========================================================
+# CONTACTS
+# =========================================================
+
+@dp.message(F.text == "📍 Контакты")
+async def contacts(message: Message):
+
+    await message.answer(
+        f"<b>📍 Контакты:</b>\n\n"
+
+        f"📍 Адрес: {ADDRESS}\n"
+        f"📞 Телефон: {PHONE}\n"
+        f"🕒 График: {WORK_TIME}\n\n"
+
+        f"Instagram:\n{INSTAGRAM}"
     )
 
 # =========================================================
@@ -428,30 +627,16 @@ async def portfolio(message: Message):
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text="Смотреть работы",
-                    url="https://ru.pinterest.com/crystalwithluv/_created/"
+                    text="✨ Смотреть работы",
+                    url=INSTAGRAM
                 )
             ]
         ]
     )
 
     await message.answer(
-        "🖼 Портфолио мастера:",
+        "🖼 <b>Наше портфолио:</b>",
         reply_markup=keyboard
-    )
-
-# =========================================================
-# CONTACTS
-# =========================================================
-
-@dp.message(F.text == "📞 Контакты")
-async def contacts(message: Message):
-
-    await message.answer(
-        "<b>📞 Контакты:</b>\n\n"
-        "Телефон: +7 999 999 99 99\n"
-        "Instagram: @beauty_salon\n"
-        "Адрес: Москва"
     )
 
 # =========================================================
@@ -468,7 +653,7 @@ async def booking(message: Message):
     if not is_sub:
 
         await message.answer(
-            "Для записи подпишитесь на канал 👇",
+            "📢 Для записи подпишитесь на канал:",
             reply_markup=sub_keyboard()
         )
 
@@ -481,13 +666,13 @@ async def booking(message: Message):
     if existing:
 
         await message.answer(
-            "❌ У вас уже есть запись."
+            "❌ У вас уже есть активная запись."
         )
 
         return
 
     await message.answer(
-        "Выберите услугу:",
+        "💎 Выберите услугу:",
         reply_markup=services_keyboard()
     )
 
@@ -505,17 +690,22 @@ async def check_sub(call: CallbackQuery):
     if is_sub:
 
         await call.message.answer(
-            "✅ Подписка подтверждена."
+            "✅ Подписка подтверждена.\n\n"
+            "Теперь вы можете записаться ❤️"
         )
 
     else:
 
         await call.message.answer(
-            "❌ Вы не подписаны."
+            "❌ Подписка не найдена.\n\n"
+            "Проверьте, что:\n"
+            "• вы подписаны\n"
+            "• канал не замьючен\n"
+            "• прошло 5-10 секунд после подписки"
         )
 
 # =========================================================
-# SERVICE
+# SERVICE SELECT
 # =========================================================
 
 @dp.callback_query(F.data.startswith("service_"))
@@ -538,7 +728,7 @@ async def choose_service(
     if not dates:
 
         await call.message.answer(
-            "❌ Свободных дат нет."
+            "❌ Свободных дат пока нет."
         )
 
         return
@@ -649,7 +839,7 @@ async def choose_time(
     )
 
     await call.message.answer(
-        "Введите ваше имя:"
+        "👤 Введите ваше имя:"
     )
 
 # =========================================================
@@ -671,7 +861,7 @@ async def get_name(
     )
 
     await message.answer(
-        "Введите номер телефона:"
+        "📱 Введите номер телефона:"
     )
 
 # =========================================================
@@ -710,31 +900,75 @@ async def get_phone(
         time
     )
 
-    await create_booking(
+    success = await create_booking(
+
         user_id=message.from_user.id,
+
+        username=message.from_user.username,
+
         service=service,
+
         name=name,
+
         phone=phone,
+
         date=date,
+
         time=time,
+
         reminder_job_id=reminder_job_id
+    )
+
+    if not success:
+
+        await message.answer(
+            "❌ Это время уже занято."
+        )
+
+        return
+
+    # ADMIN NOTIFY
+
+    admin_text = (
+
+        f"🆕 <b>НОВАЯ ЗАПИСЬ</b>\n\n"
+
+        f"👤 Имя: {name}\n"
+
+        f"📱 Телефон: {phone}\n"
+
+        f"🆔 ID: {message.from_user.id}\n"
+
+        f"👤 Username: @{message.from_user.username}\n\n"
+
+        f"💎 Услуга: {service}\n"
+
+        f"📅 Дата: {date}\n"
+
+        f"⏰ Время: {time}"
     )
 
     await bot.send_message(
         ADMIN_ID,
-        f"🆕 Новая запись!\n\n"
-        f"👤 {name}\n"
-        f"📱 {phone}\n"
-        f"💅 {service}\n"
-        f"📅 {date}\n"
-        f"⏰ {time}"
+        admin_text
     )
 
+    # USER SUCCESS
+
     await message.answer(
-        f"✅ Вы успешно записаны!\n\n"
-        f"💅 {service}\n"
-        f"📅 {date}\n"
-        f"⏰ {time}"
+
+        f"✅ <b>Запись подтверждена!</b>\n\n"
+
+        f"💎 Услуга: {service}\n"
+
+        f"📅 Дата: {date}\n"
+
+        f"⏰ Время: {time}\n\n"
+
+        f"📍 {ADDRESS}\n\n"
+
+        f"⏰ За сутки до записи "
+        f"мы отправим напоминание ❤️"
     )
 
     await state.clear()
@@ -743,7 +977,7 @@ async def get_phone(
 # MY BOOKING
 # =========================================================
 
-@dp.message(F.text == "❌ Моя запись")
+@dp.message(F.text == "👑 Моя запись")
 async def my_booking(message: Message):
 
     booking = await get_user_booking(
@@ -753,16 +987,20 @@ async def my_booking(message: Message):
     if not booking:
 
         await message.answer(
-            "❌ У вас нет записи."
+            "❌ У вас нет активной записи."
         )
 
         return
 
     text = (
-        f"<b>Ваша запись:</b>\n\n"
-        f"💅 {booking[2]}\n"
-        f"📅 {booking[5]}\n"
-        f"⏰ {booking[6]}"
+
+        f"👑 <b>Ваша запись</b>\n\n"
+
+        f"💎 Услуга: {booking[3]}\n"
+
+        f"📅 Дата: {booking[6]}\n"
+
+        f"⏰ Время: {booking[7]}"
     )
 
     keyboard = InlineKeyboardMarkup(
@@ -845,7 +1083,7 @@ async def addslot(message: Message):
         )
 
 # =========================================================
-# BOOKINGS
+# ADMIN BOOKINGS
 # =========================================================
 
 @dp.message(Command("bookings"))
@@ -869,11 +1107,16 @@ async def bookings(message: Message):
     for b in bookings:
 
         text += (
-            f"👤 {b[3]}\n"
-            f"📱 {b[4]}\n"
-            f"💅 {b[2]}\n"
-            f"📅 {b[5]}\n"
-            f"⏰ {b[6]}\n\n"
+
+            f"👤 {b[4]}\n"
+
+            f"📱 {b[5]}\n"
+
+            f"💎 {b[3]}\n"
+
+            f"📅 {b[6]}\n"
+
+            f"⏰ {b[7]}\n\n"
         )
 
     await message.answer(text)
@@ -896,3 +1139,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+```
