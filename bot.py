@@ -1,4 +1,4 @@
-```python id="4nq8vz"
+
 # =========================================================
 # PREMIUM BEAUTY SALON BOT
 # LEVEL: COMMERCIAL / PREMIUM
@@ -1139,4 +1139,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-```
+
