@@ -462,18 +462,18 @@ def main_menu():
         keyboard=[
 
             [
-                KeyboardButton(text="📅 Записаться"),
-                KeyboardButton(text="💎 Услуги")
+                KeyboardButton(text=" Записаться"),
+                KeyboardButton(text=" Услуги")
             ],
 
             [
-                KeyboardButton(text="🖼 Портфолио"),
-                KeyboardButton(text="💰 Прайс")
+                KeyboardButton(text=" Портфолио"),
+                KeyboardButton(text=" Прайс")
             ],
 
             [
-                KeyboardButton(text="👑 Моя запись"),
-                KeyboardButton(text="📍 Контакты")
+                KeyboardButton(text=" Моя запись"),
+                KeyboardButton(text=" Контакты")
             ]
         ],
 
@@ -550,14 +550,13 @@ def sub_keyboard():
 async def start(message: Message):
 
     text = (
-        f"👑 <b>{SALON_NAME}</b>\n\n"
+        f" <b>{SALON_NAME}</b>\n\n"
 
-        f"Добро пожаловать в премиальную "
-        f"beauty-студию ❤️\n\n"
+        f"Добро пожаловать в "
+        f"beauty-студию \n\n"
 
         f"✨ Онлайн запись\n"
         f"✨ Напоминания\n"
-        f"✨ Премиальный сервис\n\n"
 
         f"Выберите действие ниже 👇"
     )
@@ -577,33 +576,33 @@ async def services(message: Message):
     await message.answer(
         "<b>💎 Наши услуги:</b>\n\n"
 
-        "💅 Маникюр\n"
-        "👁 Наращивание ресниц\n"
-        "✨ Оформление бровей\n"
-        "💎 VIP-комплексы"
+        " Маникюр\n"
+        " Наращивание ресниц\n"
+        " Оформление бровей\n"
+
     )
 
 # =========================================================
 # PRICES
 # =========================================================
 
-@dp.message(F.text == "💰 Прайс")
+@dp.message(F.text == " Прайс")
 async def prices(message: Message):
 
     await message.answer(
-        "<b>💰 Прайс-лист:</b>\n\n"
+        "<b> Прайс-лист:</b>\n\n"
 
-        "💅 Маникюр — 2500₽\n"
-        "👁 Ресницы — 3500₽\n"
-        "✨ Брови — 1800₽\n"
-        "💎 VIP — 7000₽"
+        " Маникюр — 2500₽\n"
+        " Ресницы — 3500₽\n"
+        " Брови — 1800₽\n"
+        " VIP — 7000₽"
     )
 
 # =========================================================
 # CONTACTS
 # =========================================================
 
-@dp.message(F.text == "📍 Контакты")
+@dp.message(F.text == " Контакты")
 async def contacts(message: Message):
 
     await message.answer(
@@ -620,7 +619,7 @@ async def contacts(message: Message):
 # PORTFOLIO
 # =========================================================
 
-@dp.message(F.text == "🖼 Портфолио")
+@dp.message(F.text == " Портфолио")
 async def portfolio(message: Message):
 
     keyboard = InlineKeyboardMarkup(
@@ -635,7 +634,7 @@ async def portfolio(message: Message):
     )
 
     await message.answer(
-        "🖼 <b>Наше портфолио:</b>",
+        " <b>Наше портфолио:</b>",
         reply_markup=keyboard
     )
 
