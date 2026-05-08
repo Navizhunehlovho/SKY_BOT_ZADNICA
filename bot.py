@@ -45,11 +45,11 @@ logging.basicConfig(
 # CONFIG
 # =========================================================
 
-BOT_TOKEN = "YOUR_BOT_TOKEN"
+BOT_TOKEN = "8796918085:AAHuy3GTUEyP5LEN8fDKxvo6jWZjBMHY9D0"
 
 ADMIN_ID = 1350783137
 
-CHANNEL_ID = -100XXXXXXXXXX
+CHANNEL_ID = -1003931253794
 CHANNEL_LINK = "https://t.me/your_channel"
 
 DB_NAME = "beauty.db"
