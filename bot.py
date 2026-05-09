@@ -1,3 +1,9 @@
+# =========================================================
+# SKYES STUDIO BOT
+# PREMIUM DIGITAL STUDIO BOT
+# bot.py
+# =========================================================
+
 import asyncio
 import logging
 
@@ -22,7 +28,14 @@ from aiogram.client.default import DefaultBotProperties
 
 BOT_TOKEN = "8796918085:AAHuy3GTUEyP5LEN8fDKxvo6jWZjBMHY9D0"
 
-ADMIN_ID = 1350783137
+# =========================================================
+# ADMINS
+# =========================================================
+
+ADMIN_IDS = [
+    1350783137,
+    1130643805
+]
 
 # =========================================================
 # BRAND
@@ -34,7 +47,7 @@ INSTAGRAM = "https://www.instagram.com/whenzsky?igsh=MXdjdDhsM3JkOTh2NQ%3D%3D&ut
 
 PORTFOLIO = "https://t.me/wnenzskyyy"
 
-MANAGER_USERNAME = "stpphout"
+MANAGER_USERNAME = "@stpphout"
 
 # =========================================================
 # LOGGING
@@ -349,10 +362,21 @@ async def payment_confirm(call: CallbackQuery):
         f"{service['price']}"
     )
 
-    await bot.send_message(
-        ADMIN_ID,
-        admin_text
-    )
+    # =====================================================
+    # SEND TO ALL ADMINS
+    # =====================================================
+
+    for admin_id in ADMIN_IDS:
+
+        try:
+
+            await bot.send_message(
+                admin_id,
+                admin_text
+            )
+
+        except:
+            pass
 
     # =====================================================
     # USER SUCCESS
