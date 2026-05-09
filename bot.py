@@ -32,9 +32,9 @@ BRAND_NAME = "SKYES STUDIO"
 
 INSTAGRAM = "https://www.instagram.com/whenzsky?igsh=MXdjdDhsM3JkOTh2NQ%3D%3D&utm_source=qr"
 
-PORTFOLIO = "https://t.me/+fhCkm4prLSRhZTMy"
+PORTFOLIO = "https://t.me/wnenzskyyy"
 
-PAYMENT_LINK = "https://yoomoney.ru/"  # ВСТАВЬ СВОЮ ССЫЛКУ
+MANAGER_USERNAME = "stpphout"
 
 # =========================================================
 # LOGGING
@@ -64,18 +64,33 @@ dp = Dispatcher()
 SERVICES = {
 
     "bot": {
+
         "name": "🤖 Telegram Bot",
-        "price": "2000₽"
+
+        "price": "2000₽",
+
+        "manager_link":
+        "https://t.me/stpphout?text=Здравствуйте%20хочу%20заказать%20Telegram%20Bot"
     },
 
     "site": {
-        "name": "Website",
-        "price": "3000₽"
+
+        "name": "🌐 Website",
+
+        "price": "3000₽",
+
+        "manager_link":
+        "https://t.me/stpphout?text=Здравствуйте%20хочу%20заказать%20Website"
     },
 
     "design": {
-        "name": "Social Media Design",
-        "price": "1000₽"
+
+        "name": "🎨 Social Media Design",
+
+        "price": "1000₽",
+
+        "manager_link":
+        "https://t.me/stpphout?text=Здравствуйте%20хочу%20заказать%20Social%20Media%20Design"
     }
 }
 
@@ -121,14 +136,14 @@ def services_keyboard():
 
             [
                 InlineKeyboardButton(
-                    text="Website — 3000₽",
+                    text="🌐 Website — 3000₽",
                     callback_data="service_site"
                 )
             ],
 
             [
                 InlineKeyboardButton(
-                    text="Social Design — 1000₽",
+                    text="🎨 Social Design — 1000₽",
                     callback_data="service_design"
                 )
             ]
@@ -139,6 +154,8 @@ def services_keyboard():
 
 def payment_keyboard(service_key):
 
+    service = SERVICES[service_key]
+
     return InlineKeyboardMarkup(
 
         inline_keyboard=[
@@ -146,7 +163,7 @@ def payment_keyboard(service_key):
             [
                 InlineKeyboardButton(
                     text="💳 Оплатить",
-                    url=PAYMENT_LINK
+                    url=service["manager_link"]
                 )
             ],
 
@@ -197,8 +214,8 @@ async def services(message: Message):
         "💼 <b>Наши услуги</b>\n\n"
 
         "🤖 Telegram Bots\n"
-        "Websites\n"
-        "Social Media Design\n\n"
+        "🌐 Websites\n"
+        "🎨 Social Media Design\n\n"
 
         "Выберите услугу ниже 👇"
     )
@@ -220,8 +237,8 @@ async def prices(message: Message):
         "💰 <b>Прайс-лист</b>\n\n"
 
         "🤖 Telegram Bot — 2000₽\n"
-        "Website — 3000₽\n"
-        "Social Media Design — 1000₽"
+        "🌐 Website — 3000₽\n"
+        "🎨 Social Media Design — 1000₽"
     )
 
     await message.answer(text)
@@ -262,8 +279,7 @@ async def contacts(message: Message):
 
         f"Instagram:\n{INSTAGRAM}\n\n"
 
-        "Telegram:\n"
-        "@skyesstudio"
+        f"Менеджер:\n@{MANAGER_USERNAME}"
     )
 
     await message.answer(text)
@@ -288,8 +304,8 @@ async def choose_service(call: CallbackQuery):
 
         f"💰 Стоимость: {service['price']}\n\n"
 
-        "После оплаты нажмите кнопку "
-        "<b>Я оплатил</b> 👇"
+        "Для оплаты и обсуждения проекта "
+        "нажмите кнопку ниже 👇"
     )
 
     await call.message.answer(
@@ -346,11 +362,10 @@ async def payment_confirm(call: CallbackQuery):
 
         "✅ <b>Заявка отправлена!</b>\n\n"
 
-        "Мы получили информацию "
-        "об оплате ❤️\n\n"
+        "Менеджер уже получил "
+        "информацию ❤️\n\n"
 
-        "С вами скоро свяжется "
-        "менеджер студии."
+        "Ожидайте ответ в Telegram."
     )
 
     await call.message.answer(
