@@ -26,7 +26,7 @@ from aiogram.client.default import DefaultBotProperties
 # CONFIG
 # =========================================================
 
-BOT_TOKEN = "8796918085:AAHuy3GTUEyP5LEN8fDKxvo6jWZjBMHY9D0"
+BOT_TOKEN = "8796918085:AAF9iveq6vX-Bx50eh2SHK5GkvfgPmdr-0E"
 
 # =========================================================
 # ADMINS
