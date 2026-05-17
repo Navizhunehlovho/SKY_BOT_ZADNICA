@@ -41,7 +41,7 @@ ADMIN_IDS = [
 # BRAND
 # =========================================================
 
-BRAND_NAME = "SKYES STUDIO"
+BRAND_NAME = "SKIES STUDIO"
 
 PORTFOLIO = "https://t.me/wnenzskyyy"
 
