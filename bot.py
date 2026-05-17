@@ -43,11 +43,9 @@ ADMIN_IDS = [
 
 BRAND_NAME = "SKYES STUDIO"
 
-INSTAGRAM = "https://www.instagram.com/whenzsky?igsh=MXdjdDhsM3JkOTh2NQ%3D%3D&utm_source=qr"
-
 PORTFOLIO = "https://t.me/wnenzskyyy"
 
-MANAGER_USERNAME = "@stpphout"
+MANAGER_USERNAME = "stpphout"
 
 # =========================================================
 # LOGGING
@@ -77,33 +75,45 @@ dp = Dispatcher()
 SERVICES = {
 
     "bot": {
-
         "name": "🤖 Telegram Bot",
-
         "price": "2000₽",
-
         "manager_link":
         "https://t.me/stpphout?text=Здравствуйте%20хочу%20заказать%20Telegram%20Bot"
     },
 
     "site": {
-
         "name": "🌐 Website",
-
         "price": "3000₽",
-
         "manager_link":
         "https://t.me/stpphout?text=Здравствуйте%20хочу%20заказать%20Website"
     },
 
     "design": {
-
         "name": "🎨 Social Media Design",
-
         "price": "1000₽",
-
         "manager_link":
         "https://t.me/stpphout?text=Здравствуйте%20хочу%20заказать%20Social%20Media%20Design"
+    },
+
+    "install": {
+        "name": "🛠 Установка",
+        "price": "500₽",
+        "manager_link":
+        "https://t.me/stpphout?text=Здравствуйте%20хочу%20заказать%20Установку"
+    },
+
+    "image": {
+        "name": "🖼 Одно изображение",
+        "price": "250₽",
+        "manager_link":
+        "https://t.me/stpphout?text=Здравствуйте%20хочу%20заказать%20Изображение"
+    },
+
+    "complex_image": {
+        "name": "🎨 Сложное изображение",
+        "price": "300₽",
+        "manager_link":
+        "https://t.me/stpphout?text=Здравствуйте%20хочу%20заказать%20Сложное%20изображение"
     }
 }
 
@@ -159,6 +169,27 @@ def services_keyboard():
                     text="🎨 Social Design — 1000₽",
                     callback_data="service_design"
                 )
+            ],
+
+            [
+                InlineKeyboardButton(
+                    text="🛠 Установка — 500₽",
+                    callback_data="service_install"
+                )
+            ],
+
+            [
+                InlineKeyboardButton(
+                    text="🖼 Одно изображение — 250₽",
+                    callback_data="service_image"
+                )
+            ],
+
+            [
+                InlineKeyboardButton(
+                    text="🎨 Сложное изображение — 300₽",
+                    callback_data="service_complex_image"
+                )
             ]
         ]
     )
@@ -205,7 +236,9 @@ async def start(message: Message):
         "Мы создаём:\n"
         "• Telegram-ботов\n"
         "• сайты\n"
-        "• дизайн соцсетей\n\n"
+        "• дизайн соцсетей\n"
+        "• установку\n"
+        "• изображения\n\n"
 
         "Выберите действие ниже 👇"
     )
@@ -228,7 +261,10 @@ async def services(message: Message):
 
         "🤖 Telegram Bots\n"
         "🌐 Websites\n"
-        "🎨 Social Media Design\n\n"
+        "🎨 Social Media Design\n"
+        "🛠 Установка\n"
+        "🖼 Одно изображение\n"
+        "🎨 Сложное изображение\n\n"
 
         "Выберите услугу ниже 👇"
     )
@@ -251,7 +287,10 @@ async def prices(message: Message):
 
         "🤖 Telegram Bot — 2000₽\n"
         "🌐 Website — 3000₽\n"
-        "🎨 Social Media Design — 1000₽"
+        "🎨 Social Media Design — 1000₽\n"
+        "🛠 Установка — 500₽\n"
+        "🖼 Одно изображение — 250₽\n"
+        "🎨 Сложное изображение — 300₽"
     )
 
     await message.answer(text)
@@ -290,8 +329,6 @@ async def contacts(message: Message):
 
         "📞 <b>Контакты</b>\n\n"
 
-        f"Instagram:\n{INSTAGRAM}\n\n"
-
         f"Менеджер:\n@{MANAGER_USERNAME}"
     )
 
@@ -328,6 +365,8 @@ async def choose_service(call: CallbackQuery):
         )
     )
 
+    await call.answer()
+
 # =========================================================
 # PAYMENT CONFIRM
 # =========================================================
@@ -341,10 +380,6 @@ async def payment_confirm(call: CallbackQuery):
     )
 
     service = SERVICES[service_key]
-
-    # =====================================================
-    # ADMIN NOTIFY
-    # =====================================================
 
     admin_text = (
 
@@ -362,10 +397,6 @@ async def payment_confirm(call: CallbackQuery):
         f"{service['price']}"
     )
 
-    # =====================================================
-    # SEND TO ALL ADMINS
-    # =====================================================
-
     for admin_id in ADMIN_IDS:
 
         try:
@@ -375,12 +406,8 @@ async def payment_confirm(call: CallbackQuery):
                 admin_text
             )
 
-        except:
-            pass
-
-    # =====================================================
-    # USER SUCCESS
-    # =====================================================
+        except Exception as e:
+            print(e)
 
     success_text = (
 
@@ -395,6 +422,8 @@ async def payment_confirm(call: CallbackQuery):
     await call.message.answer(
         success_text
     )
+
+    await call.answer()
 
 # =========================================================
 # MAIN
